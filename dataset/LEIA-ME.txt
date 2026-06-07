@@ -1,0 +1,52 @@
+==============================================================
+  COMO OBTER O DATASET (Fruits 360)
+==============================================================
+
+Esta pasta deve conter o dataset de frutas organizado em
+subpastas, onde CADA SUBPASTA é uma CLASSE (o nome da pasta
+é o rótulo usado pelo classificador).
+
+Estrutura esperada após o download:
+
+    dataset/
+    ├── Apple/
+    │   ├── img001.jpg
+    │   ├── img002.jpg
+    │   └── ...
+    ├── Banana/
+    │   ├── img001.jpg
+    │   └── ...
+    └── Orange/
+        └── ...
+
+--------------------------------------------------------------
+OPÇÃO 1 - Download manual pelo site do Kaggle
+--------------------------------------------------------------
+1. Acesse: https://www.kaggle.com/datasets/moltean/fruits
+2. Clique em "Download" (necessário ter conta no Kaggle).
+3. Extraia o .zip. Dentro dele há as pastas "Training" e "Test".
+4. Copie ALGUMAS classes (ex.: Apple, Banana, Orange) da pasta
+   "Training" para dentro desta pasta "dataset/".
+
+   Dica: para a apresentação, 3 a 5 classes com ~100 imagens
+   cada já é suficiente e roda rápido.
+
+--------------------------------------------------------------
+OPÇÃO 2 - Download via linha de comando (Kaggle CLI)
+--------------------------------------------------------------
+    pip install kaggle
+    # Coloque seu kaggle.json em ~/.kaggle/
+    kaggle datasets download -d moltean/fruits
+    unzip fruits.zip
+
+Depois mova as classes desejadas para esta pasta.
+
+--------------------------------------------------------------
+NÃO TEM O DATASET? Sem problema!
+--------------------------------------------------------------
+Rode a demonstração que gera imagens sintéticas automaticamente:
+
+    python demo.py
+
+Ela prova que todo o pipeline funciona de ponta a ponta,
+mesmo sem nenhuma imagem real baixada.

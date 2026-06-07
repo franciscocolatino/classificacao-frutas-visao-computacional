@@ -1,0 +1,19 @@
+# Ambientes virtuais
+venv/
+.venv/
+.venv_demo/
+
+# Caches do Python
+__pycache__/
+*.pyc
+
+# Imagens do dataset (mas mantém as instruções)
+dataset/*
+!dataset/LEIA-ME.txt
+
+# Saídas geradas (descomente se NÃO quiser versionar os resultados)
+# resultados/
+
+# Notebooks executados / checkpoints
+.ipynb_checkpoints/
+_test_exec.ipynb

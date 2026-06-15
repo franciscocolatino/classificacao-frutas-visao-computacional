@@ -27,11 +27,17 @@ import os
 import re
 import shutil
 
+try:
+    import kagglehub
+except ImportError:  # pragma: no cover - tratado em runtime com mensagem clara
+    kagglehub = None
+
 # Caminho padrão onde o Fruits 360 100x100 foi extraído (ajuste se necessário).
 ORIGEM_PADRAO = os.path.join(
     "dataset", "archive", "fruits-360_100x100", "fruits-360", "Training"
 )
 DESTINO_PADRAO = os.path.join("dataset", "frutas")
+NOME_DATASET_KAGGLE = "moltean/fruits"
 
 # 8 frutas escolhidas para MAXIMIZAR a diversidade de forma e textura:
 #   - Banana    : alongada (forma marcante)
@@ -48,6 +54,59 @@ CLASSES_PADRAO = [
 ]
 
 EXTENSOES = (".jpg", ".jpeg", ".png", ".bmp")
+
+
+def resolver_origem(origem):
+    """Resolve a pasta de origem, baixando o dataset via Kaggle se necessário."""
+    if os.path.isdir(origem):
+        if os.path.isdir(os.path.join(origem, "Training")):
+            return os.path.join(origem, "Training")
+        subpastas = [
+            nome for nome in os.listdir(origem)
+            if os.path.isdir(os.path.join(origem, nome))
+        ]
+        if subpastas:
+            possui_imagens_diretas = any(
+                any(arq.lower().endswith(EXTENSOES) for arq in os.listdir(os.path.join(origem, sub)))
+                for sub in subpastas
+            )
+            if possui_imagens_diretas:
+                return origem
+
+    if kagglehub is None:
+        raise ImportError(
+            "kagglehub não está instalado. Execute `pip install -r requirements.txt` "
+            "ou instale `kagglehub` para baixar o dataset automaticamente."
+        )
+
+    print(f"[INFO] Pasta local não encontrada. Baixando '{NOME_DATASET_KAGGLE}' via kagglehub...")
+    caminho_baixado = kagglehub.dataset_download(NOME_DATASET_KAGGLE)
+
+    pasta_training = os.path.join(caminho_baixado, "Training")
+    if os.path.isdir(pasta_training):
+        return pasta_training
+
+    for raiz, subpastas, _ in os.walk(caminho_baixado):
+        if os.path.basename(raiz).lower() == "training" and subpastas:
+            return raiz
+
+    if os.path.isdir(caminho_baixado):
+        subpastas = [
+            nome for nome in os.listdir(caminho_baixado)
+            if os.path.isdir(os.path.join(caminho_baixado, nome))
+        ]
+        if subpastas:
+            possui_imagens_diretas = any(
+                any(arq.lower().endswith(EXTENSOES) for arq in os.listdir(os.path.join(caminho_baixado, sub)))
+                for sub in subpastas
+            )
+            if possui_imagens_diretas:
+                return caminho_baixado
+
+    raise FileNotFoundError(
+        "O dataset foi baixado, mas a pasta 'Training' não foi encontrada "
+        f"em '{caminho_baixado}'."
+    )
 
 
 def pastas_da_classe(origem, base):
@@ -89,11 +148,7 @@ def amostrar(caminhos, n):
 
 def preparar(origem, destino, classes, por_classe):
     """Monta o subconjunto curado copiando as imagens selecionadas."""
-    if not os.path.isdir(origem):
-        raise FileNotFoundError(
-            f"Pasta de origem não encontrada: {origem}\n"
-            "Verifique se o Fruits 360 foi extraído ou ajuste --origem."
-        )
+    origem = resolver_origem(origem)
 
     os.makedirs(destino, exist_ok=True)
     print(f"Origem : {origem}")

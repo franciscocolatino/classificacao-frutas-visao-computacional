@@ -67,7 +67,7 @@ python demo.py
 
 ### Opção B — Pipeline completo com o dataset real
 
-Depois de baixar o dataset (próxima seção):
+Depois de configurar o Kaggle e/ou deixar o dataset disponível localmente:
 
 ```bash
 python main.py
@@ -89,14 +89,21 @@ Parâmetros úteis:
 
 ## 📥 Como baixar e preparar o dataset (Fruits 360)
 
-1. Acesse o **[Fruits 360 no Kaggle](https://www.kaggle.com/datasets/moltean/fruits)**.
-2. Baixe e extraia o `.zip` (precisa de conta no Kaggle). Ele vem aninhado, ex.:
-   `dataset/archive/fruits-360_100x100/fruits-360/Training/<classe>/*.jpg`.
-3. Rode o utilitário que monta um **subconjunto curado** no formato esperado:
+O script de preparação agora pode baixar automaticamente o dataset via
+`kagglehub`:
 
 ```bash
 python preparar_dataset.py
 ```
+
+Se a pasta local não existir, ele chama:
+
+```python
+import kagglehub
+path = kagglehub.dataset_download("moltean/fruits")
+```
+
+e monta um **subconjunto curado** no formato esperado:
 
 Isso cria `dataset/frutas/` com 8 frutas de **formas e texturas distintas**
 (Banana, Apple, Orange, Strawberry, Avocado, Pineapple, Raspberry, Lemon),

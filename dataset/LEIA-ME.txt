@@ -32,14 +32,13 @@ OPÇÃO 1 - Download manual pelo site do Kaggle
    cada já é suficiente e roda rápido.
 
 --------------------------------------------------------------
-OPÇÃO 2 - Download via linha de comando (Kaggle CLI)
+OPÇÃO 2 - Download automático via Python (kagglehub)
 --------------------------------------------------------------
-    pip install kaggle
-    # Coloque seu kaggle.json em ~/.kaggle/
-    kaggle datasets download -d moltean/fruits
-    unzip fruits.zip
+    pip install kagglehub
+    python preparar_dataset.py
 
-Depois mova as classes desejadas para esta pasta.
+O script baixa o Fruits 360 automaticamente e gera o subconjunto
+curado em dataset/frutas/.
 
 --------------------------------------------------------------
 NÃO TEM O DATASET? Sem problema!

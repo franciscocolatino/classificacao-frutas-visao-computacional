@@ -183,6 +183,8 @@ Todas as 8 classes atingiram **F1 ≥ 0,90** (Lemon = 1,00).
 | `mapa_lbp.png`                   | Mapa de textura LBP                                 |
 | `matriz_confusao.png`            | Matriz de confusão colorida                         |
 | `f1_por_classe.png`              | Gráfico de barras de F1-score por classe            |
+| `exemplos_predicoes.png`         | Galeria só com acertos (Real × Previsto)             |
+| `erros_classificacao.png`        | Galeria apenas com os erros de classificação         |
 | `relatorio_metricas.csv`         | Relatório completo de métricas                      |
 
 > No `demo.py`, as visualizações de etapas/Fourier/LBP são geradas para **cada forma**

@@ -215,7 +215,7 @@ def plotar_mapa_lbp(dados, caminho_png):
 
 def plotar_amostras_preditas(
     caminhos, y_verdadeiro, y_previsto, classes, caminho_png,
-    n=15, colunas=5, apenas_erros=False, seed=42,
+    n=15, colunas=6, apenas_erros=False, apenas_acertos=False, seed=42,
 ):
     """Mostra uma GALERIA de imagens de teste com 'Real' vs 'Previsto'.
 
@@ -231,16 +231,23 @@ def plotar_amostras_preditas(
         n (int): nº máximo de imagens exibidas.
         colunas (int): imagens por linha na grade.
         apenas_erros (bool): se True, mostra somente as classificações erradas.
+        apenas_acertos (bool): se True, mostra somente as classificações corretas.
         seed (int): semente para amostragem reprodutível.
     """
     caminhos = np.asarray(caminhos)
     y_verdadeiro = np.asarray(y_verdadeiro)
     y_previsto = np.asarray(y_previsto)
 
+    if apenas_erros and apenas_acertos:
+        raise ValueError("Use apenas_erros ou apenas_acertos, não os dois ao mesmo tempo.")
+
     indices = np.arange(len(caminhos))
     if apenas_erros:
         # Seleciona apenas onde o modelo errou (real != previsto).
         indices = indices[y_verdadeiro != y_previsto]
+    elif apenas_acertos:
+        # Seleciona apenas onde o modelo acertou (real == previsto).
+        indices = indices[y_verdadeiro == y_previsto]
 
     # Caso não haja nada a mostrar (ex.: nenhum erro), gera um aviso visual.
     if len(indices) == 0:
@@ -259,7 +266,7 @@ def plotar_amostras_preditas(
         indices = np.sort(gerador.choice(indices, size=n, replace=False))
 
     linhas = math.ceil(len(indices) / colunas)
-    fig, eixos = plt.subplots(linhas, colunas, figsize=(colunas * 2.4, linhas * 2.7))
+    fig, eixos = plt.subplots(linhas, colunas, figsize=(colunas * 2.5, linhas * 2.2))
     eixos = np.atleast_1d(eixos).ravel()
 
     for eixo, idx in zip(eixos, indices):

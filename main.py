@@ -168,8 +168,11 @@ def main():
     log.info("=" * 60)
     log.info("ETAPA 1/5 — Carregando e processando o dataset")
     log.info("=" * 60)
-    X, y, classes = carregar_dataset(
-        args.dataset, n_fourier=args.n_fourier, max_por_classe=args.max_por_classe
+    X, y, classes, caminhos = carregar_dataset(
+        args.dataset,
+        n_fourier=args.n_fourier,
+        max_por_classe=args.max_por_classe,
+        retornar_caminhos=True,
     )
     log.info("Total: %d amostras | %d características por amostra | %d classes",
              X.shape[0], X.shape[1], len(classes))
@@ -178,8 +181,8 @@ def main():
     log.info("ETAPA 2/5 — Separando treino e teste")
     log.info("=" * 60)
     # stratify mantém a proporção de classes em treino e teste.
-    X_treino, X_teste, y_treino, y_teste = train_test_split(
-        X, y, test_size=args.teste, random_state=42, stratify=y
+    X_treino, X_teste, y_treino, y_teste, _caminhos_treino, caminhos_teste = train_test_split(
+        X, y, caminhos, test_size=args.teste, random_state=42, stratify=y
     )
     log.info("Treino: %d amostras | Teste: %d amostras", len(X_treino), len(X_teste))
 
@@ -211,6 +214,25 @@ def main():
     )
     avaliacao.plotar_f1_por_classe(
         y_teste, y_previsto, classes, os.path.join(pasta_resultados, "f1_por_classe.png")
+    )
+    avaliacao.plotar_amostras_preditas(
+        caminhos_teste,
+        y_teste,
+        y_previsto,
+        classes,
+        os.path.join(pasta_resultados, "exemplos_predicoes.png"),
+        n=24,
+        colunas=6,
+        apenas_acertos=True,
+    )
+    avaliacao.plotar_amostras_preditas(
+        caminhos_teste,
+        y_teste,
+        y_previsto,
+        classes,
+        os.path.join(pasta_resultados, "erros_classificacao.png"),
+        n=15,
+        apenas_erros=True,
     )
     gerar_visualizacoes_amostra(args.dataset, classes, pasta_resultados)
 

@@ -1,16 +1,11 @@
 """
-Módulo de AVALIAÇÃO e VISUALIZAÇÕES.
+Metricas e visualizacoes.
 
-Reúne tudo que gera saídas para análise e para a apresentação:
-    - Métricas: acurácia, precisão, recall e F1-score.
-    - Matriz de confusão (imagem PNG com seaborn).
-    - Relatório de métricas exportado em CSV.
-    - Gráfico de barras de F1-score por classe.
-    - Visualizações do pipeline: etapas de pré-processamento,
-      assinatura de forma (Fourier) e mapa de textura LBP.
+Calcula as metricas (acuracia, precisao, recall, F1), salva o relatorio
+em CSV e gera os graficos (matriz de confusao, F1 por classe, etapas do
+pre-processamento, assinatura de Fourier e mapa LBP).
 
-Usa o backend "Agg" do matplotlib para funcionar mesmo em servidores
-sem interface gráfica (apenas salva arquivos, não abre janelas).
+Usa o backend Agg do matplotlib pra funcionar sem interface grafica.
 """
 
 import math
@@ -19,7 +14,7 @@ import os
 import cv2
 import matplotlib
 
-matplotlib.use("Agg")  # backend não-interativo: gera arquivos, não janelas
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -37,19 +32,12 @@ from . import extrator_fourier, extrator_textura
 
 
 def garantir_pasta(pasta):
-    """Cria a pasta de resultados se ela ainda não existir."""
+    """Cria a pasta de resultados se nao existir."""
     os.makedirs(pasta, exist_ok=True)
 
 
 def calcular_metricas(y_verdadeiro, y_previsto):
-    """Calcula as métricas globais de classificação.
-
-    Usamos média 'weighted' (ponderada pelo nº de amostras de cada classe)
-    para que classes desbalanceadas não distorçam o resultado global.
-
-    Returns:
-        dict: {'acuracia', 'precisao', 'recall', 'f1'}.
-    """
+    """Metricas globais. Uso average weighted por causa do desbalanceamento."""
     return {
         "acuracia": accuracy_score(y_verdadeiro, y_previsto),
         "precisao": precision_score(y_verdadeiro, y_previsto, average="weighted", zero_division=0),
@@ -59,14 +47,7 @@ def calcular_metricas(y_verdadeiro, y_previsto):
 
 
 def salvar_relatorio_csv(y_verdadeiro, y_previsto, classes, caminho_csv):
-    """Gera o relatório de classificação (por classe) e salva em CSV.
-
-    O `classification_report` do sklearn já calcula precisão, recall,
-    F1 e suporte por classe — exportamos isso como tabela.
-
-    Returns:
-        pandas.DataFrame: o relatório, caso queira inspecionar em memória.
-    """
+    """Salva o classification_report (metricas por classe) em CSV."""
     relatorio = classification_report(
         y_verdadeiro,
         y_previsto,
@@ -81,18 +62,13 @@ def salvar_relatorio_csv(y_verdadeiro, y_previsto, classes, caminho_csv):
 
 
 def plotar_matriz_confusao(y_verdadeiro, y_previsto, classes, caminho_png):
-    """Plota e salva a matriz de confusão como heatmap colorido (seaborn).
-
-    A matriz de confusão mostra, para cada classe real (linha), quantas
-    amostras foram previstas em cada classe (coluna). A diagonal são os
-    acertos; fora da diagonal estão as confusões entre classes.
-    """
+    """Matriz de confusao como heatmap."""
     matriz = confusion_matrix(y_verdadeiro, y_previsto, labels=list(range(len(classes))))
 
     plt.figure(figsize=(8, 6))
     sns.heatmap(
         matriz,
-        annot=True,        # escreve o número em cada célula
+        annot=True,
         fmt="d",
         cmap="Blues",
         xticklabels=classes,
@@ -108,11 +84,7 @@ def plotar_matriz_confusao(y_verdadeiro, y_previsto, classes, caminho_png):
 
 
 def plotar_f1_por_classe(y_verdadeiro, y_previsto, classes, caminho_png):
-    """Plota um gráfico de barras com o F1-score de cada classe.
-
-    Permite enxergar rapidamente QUAIS classes o modelo classifica bem
-    e quais são mais difíceis (barras mais baixas).
-    """
+    """Grafico de barras com o F1 de cada classe."""
     f1_por_classe = f1_score(
         y_verdadeiro,
         y_previsto,
@@ -128,7 +100,7 @@ def plotar_f1_por_classe(y_verdadeiro, y_previsto, classes, caminho_png):
     plt.title("F1-score por Classe")
     plt.xticks(rotation=30, ha="right")
 
-    # Escreve o valor acima de cada barra para leitura fácil na apresentação.
+    # escreve o valor em cima de cada barra
     for barra, valor in zip(barras, f1_por_classe):
         plt.text(
             barra.get_x() + barra.get_width() / 2,
@@ -145,18 +117,10 @@ def plotar_f1_por_classe(y_verdadeiro, y_previsto, classes, caminho_png):
 
 
 def plotar_etapas_preprocessamento(dados, caminho_png):
-    """Mostra lado a lado: original -> após filtro -> após segmentação.
-
-    Visualização-chave para a banca: deixa explícito o efeito de cada
-    etapa do pré-processamento sobre a imagem.
-
-    Args:
-        dados (dict): saída de `preprocessamento.preprocessar(_array)`.
-        caminho_png (str): onde salvar a figura.
-    """
+    """Mostra original, apos filtro e apos segmentacao lado a lado."""
     fig, eixos = plt.subplots(1, 3, figsize=(14, 5))
 
-    # OpenCV usa BGR; matplotlib espera RGB. Convertemos só para exibir.
+    # OpenCV usa BGR, matplotlib espera RGB
     original_rgb = dados["original"][:, :, ::-1]
     eixos[0].imshow(original_rgb)
     eixos[0].set_title("1. Original (256x256)")
@@ -176,16 +140,12 @@ def plotar_etapas_preprocessamento(dados, caminho_png):
 
 
 def plotar_assinatura_fourier(dados, caminho_png):
-    """Plota a 'assinatura de forma' (distância ao centroide) do objeto.
-
-    É a representação visual e intuitiva do que o descritor de Fourier
-    resume numericamente: como a borda do objeto varia ao longo do contorno.
-    """
+    """Plota a assinatura de forma (distancia ao centroide)."""
     assinatura = extrator_fourier.assinatura_distancia_centroide(dados["mascara"])
 
     plt.figure(figsize=(9, 4))
     plt.plot(assinatura, color="darkorange", linewidth=2)
-    plt.title("Descritor de Forma — Assinatura (distância ao centroide)")
+    plt.title("Descritor de Forma - Assinatura (distância ao centroide)")
     plt.xlabel("Ponto ao longo do contorno")
     plt.ylabel("Distância normalizada")
     plt.grid(alpha=0.3)
@@ -195,7 +155,7 @@ def plotar_assinatura_fourier(dados, caminho_png):
 
 
 def plotar_mapa_lbp(dados, caminho_png):
-    """Plota o mapa de textura LBP ao lado da imagem em cinza."""
+    """Plota o mapa LBP ao lado da imagem em cinza."""
     lbp = extrator_textura.mapa_lbp(dados["cinza"])
 
     fig, eixos = plt.subplots(1, 2, figsize=(11, 5))
@@ -203,7 +163,6 @@ def plotar_mapa_lbp(dados, caminho_png):
     eixos[0].set_title("Imagem em Cinza")
     eixos[0].axis("off")
 
-    # 'nipy_spectral' realça as diferentes regiões de microtextura.
     eixos[1].imshow(lbp, cmap="nipy_spectral")
     eixos[1].set_title("Mapa de Textura (LBP)")
     eixos[1].axis("off")
@@ -215,41 +174,22 @@ def plotar_mapa_lbp(dados, caminho_png):
 
 def plotar_amostras_preditas(
     caminhos, y_verdadeiro, y_previsto, classes, caminho_png,
-    n=15, colunas=6, apenas_erros=False, apenas_acertos=False, seed=42,
+    n=15, colunas=5, apenas_erros=False, seed=42,
 ):
-    """Mostra uma GALERIA de imagens de teste com 'Real' vs 'Previsto'.
+    """Galeria de imagens de teste com o rotulo real e o previsto.
 
-    É a forma mais intuitiva de apresentar o resultado: vê-se a imagem real
-    e a decisão do modelo. Acertos ficam em verde e erros em vermelho.
-
-    Args:
-        caminhos (array-like): caminhos das imagens de teste (alinhados a y).
-        y_verdadeiro (array-like): rótulos reais (índices das classes).
-        y_previsto (array-like): rótulos previstos pelo modelo.
-        classes (list[str]): nomes das classes.
-        caminho_png (str): onde salvar a figura.
-        n (int): nº máximo de imagens exibidas.
-        colunas (int): imagens por linha na grade.
-        apenas_erros (bool): se True, mostra somente as classificações erradas.
-        apenas_acertos (bool): se True, mostra somente as classificações corretas.
-        seed (int): semente para amostragem reprodutível.
+    Acerto fica verde, erro fica vermelho. Se apenas_erros=True mostra so
+    onde o modelo errou.
     """
     caminhos = np.asarray(caminhos)
     y_verdadeiro = np.asarray(y_verdadeiro)
     y_previsto = np.asarray(y_previsto)
 
-    if apenas_erros and apenas_acertos:
-        raise ValueError("Use apenas_erros ou apenas_acertos, não os dois ao mesmo tempo.")
-
     indices = np.arange(len(caminhos))
     if apenas_erros:
-        # Seleciona apenas onde o modelo errou (real != previsto).
         indices = indices[y_verdadeiro != y_previsto]
-    elif apenas_acertos:
-        # Seleciona apenas onde o modelo acertou (real == previsto).
-        indices = indices[y_verdadeiro == y_previsto]
 
-    # Caso não haja nada a mostrar (ex.: nenhum erro), gera um aviso visual.
+    # nada pra mostrar (ex.: nenhum erro)
     if len(indices) == 0:
         plt.figure(figsize=(6, 2))
         plt.text(0.5, 0.5, "Nenhuma amostra para exibir\n(sem erros de classificação!)",
@@ -260,13 +200,13 @@ def plotar_amostras_preditas(
         plt.close()
         return
 
-    # Amostragem reprodutível quando há mais imagens do que o limite.
+    # se tem mais imagens que o limite, sorteia de forma reprodutivel
     gerador = np.random.default_rng(seed)
     if len(indices) > n:
         indices = np.sort(gerador.choice(indices, size=n, replace=False))
 
     linhas = math.ceil(len(indices) / colunas)
-    fig, eixos = plt.subplots(linhas, colunas, figsize=(colunas * 2.5, linhas * 2.2))
+    fig, eixos = plt.subplots(linhas, colunas, figsize=(colunas * 2.4, linhas * 2.7))
     eixos = np.atleast_1d(eixos).ravel()
 
     for eixo, idx in zip(eixos, indices):
@@ -276,13 +216,12 @@ def plotar_amostras_preditas(
         real = classes[y_verdadeiro[idx]]
         previsto = classes[y_previsto[idx]]
         acertou = y_verdadeiro[idx] == y_previsto[idx]
-        # Verde = acerto, vermelho = erro: leitura imediata na apresentação.
         cor = "green" if acertou else "red"
         marcador = "✓" if acertou else "✗"
         eixo.set_title(f"{marcador} Real: {real}\nPrev: {previsto}", color=cor, fontsize=9)
         eixo.axis("off")
 
-    # Desliga os eixos que sobraram na última linha da grade.
+    # desliga os eixos que sobraram na ultima linha
     for eixo in eixos[len(indices):]:
         eixo.axis("off")
 

@@ -1,24 +1,14 @@
 """
-Utilitário para PREPARAR um subconjunto do Fruits 360 para o projeto.
+Prepara um subconjunto do Fruits 360 pro projeto.
 
-O Fruits 360 original traz ~260 classes muito granulares (ex.: "Apple 10",
-"Apple 11", várias cerejas quase idênticas) e em uma estrutura aninhada:
-
-    dataset/archive/fruits-360_100x100/fruits-360/Training/<classe>/*.jpg
-
-Para a apresentação, usar TODAS as classes seria inviável (treino lento e
-matriz de confusão ilegível) e, como os descritores são handcrafted
-(Fourier + GLCM + LBP) + SVM, classes quase idênticas só gerariam confusão.
-
-Este script monta um subconjunto curado e no formato que o `main.py` espera
-(`dataset/frutas/<Classe>/*.jpg`):
-    - escolhe poucas classes com FORMAS e TEXTURAS bem distintas;
-    - junta as variantes numeradas de cada fruta numa única classe
-      (ex.: "Banana 1", "Banana 3", "Banana 4" -> "Banana");
-    - amostra um número fixo de imagens por classe (balanceamento).
+O Fruits 360 original tem ~260 classes muito parecidas (Apple 10, Apple 11,
+varias cerejas) numa estrutura aninhada. Aqui escolho poucas frutas bem
+distintas, junto as variantes numeradas (Banana 1, Banana 3 -> Banana) e
+copio um numero fixo de imagens por classe pro formato que o main.py espera
+(dataset/frutas/<Classe>/*.jpg).
 
 Uso:
-    python preparar_dataset.py            # usa os padrões abaixo
+    python preparar_dataset.py
     python preparar_dataset.py --por_classe 300 --classes Banana Apple Lemon
 """
 
@@ -29,25 +19,16 @@ import shutil
 
 try:
     import kagglehub
-except ImportError:  # pragma: no cover - tratado em runtime com mensagem clara
+except ImportError:
     kagglehub = None
 
-# Caminho padrão onde o Fruits 360 100x100 foi extraído (ajuste se necessário).
 ORIGEM_PADRAO = os.path.join(
     "dataset", "archive", "fruits-360_100x100", "fruits-360", "Training"
 )
 DESTINO_PADRAO = os.path.join("dataset", "frutas")
 NOME_DATASET_KAGGLE = "moltean/fruits"
 
-# 8 frutas escolhidas para MAXIMIZAR a diversidade de forma e textura:
-#   - Banana    : alongada (forma marcante)
-#   - Apple     : redonda, superfície lisa
-#   - Orange    : redonda, casca com leve textura
-#   - Strawberry: cônica + sementes (textura granulada)
-#   - Avocado   : oval/escura
-#   - Pineapple : superfície muito rugosa (ótimo para GLCM/LBP)
-#   - Raspberry : aglomerado granular (textura forte)
-#   - Lemon     : oval, amarela
+# frutas escolhidas por terem formas e texturas bem diferentes entre si
 CLASSES_PADRAO = [
     "Banana", "Apple", "Orange", "Strawberry",
     "Avocado", "Pineapple", "Raspberry", "Lemon",
@@ -110,12 +91,8 @@ def resolver_origem(origem):
 
 
 def pastas_da_classe(origem, base):
-    """Retorna as subpastas que pertencem a uma fruta 'base'.
-
-    Considera a pasta com o nome exato ('Banana') e as variantes numeradas
-    ('Banana 1', 'Banana 3'), mas NÃO variantes com outro nome
-    ('Banana Red', 'Banana Lady Finger') — assim a classe fica coesa.
-    """
+    """Pega as subpastas de uma fruta: o nome exato e as variantes numeradas
+    (Banana, Banana 1, Banana 3), mas nao 'Banana Red' etc."""
     padrao = re.compile(rf"^{re.escape(base)}( \d+)?$")
     return [
         nome for nome in sorted(os.listdir(origem))
@@ -135,11 +112,8 @@ def coletar_imagens(origem, subpastas):
 
 
 def amostrar(caminhos, n):
-    """Amostra ~n imagens de forma uniforme (espaçada) na lista.
-
-    Pegar em passo regular (em vez das n primeiras) cobre TODAS as variantes
-    numeradas, dando mais variedade visual à classe.
-    """
+    """Pega ~n imagens espacadas na lista (em vez das n primeiras), assim
+    cobre as varias variantes numeradas."""
     if n is None or len(caminhos) <= n:
         return caminhos
     passo = len(caminhos) / n
